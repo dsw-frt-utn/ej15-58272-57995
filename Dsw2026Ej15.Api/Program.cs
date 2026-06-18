@@ -1,22 +1,29 @@
+using Dsw2026Ej15.Api.Middlewares;
+using Dsw2026Ej15.Data;
+using Dsw2026Ej15.Domain;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Registrar los controladores tradicionales
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+
+// Punto 3.f: Registrar la persistencia en memoria como SINGLETON
+builder.Services.AddSingleton<IPersistence, PersistenceInMemory>();
+
+// Punto 3.j: Registrar el servicio base para el sondeo de estado
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+// Punto 3.i: Activar el Middleware de excepciones globales (DEBE ir arriba de todo)
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-app.UseHttpsRedirection();
+app.UseRouting();
 
-app.UseAuthorization();
+// Punto 3.j: Mapear el sondeo de estado básico en la ruta /health-check
+app.MapHealthChecks("/health-check");
 
 app.MapControllers();
 
